@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>liveSearcher example</title>
+    <link rel="stylesheet" href="demo/example.css"/>
+</head>
+<body>
+    <div>
+        <h3>liveSearcher - the jQuery plugin</h3>
+        <p>Enter the some text into the input box below</p>
+        <p>You can set the events handler to to implement any functionality, what you want</p>
+        <p>Open the developer console to see when events handlers are triggered</p>
+        <p>You can see the more usage examples and the events list in the <a href="https://github.com/readdle/jquery-livesearcher">Documentation</a></p>
+    </div>
+
+    <!-- SEARCH -->
+    <div>
+        <input type="text" id="livesearch" placeholder="Enter some text here..."/>
+        <div class="results"></div>
+    </div>
+
+    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="../jquery.liveSearcher.js"></script>
+
+    <script type="text/javascript">
+        $("#livesearch").liveSearch({
+            dataSource: 'demo/dummy.php'
+        });
+
+        $("#livesearch").on('liveSearch.dataLoaded', function(e, args) {
+            console.log('DATA LOAD event', args);
+        });
+
+        $(".results").on('liveSearch.select', function(e, args) {
+            console.log('SELECT event', args);
+        });
+    </script>
+</body>
+</html>
