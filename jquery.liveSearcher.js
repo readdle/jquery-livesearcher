@@ -1,6 +1,6 @@
 /**
  * liveSearcher - jQuery Plugin
- * version: 1.0
+ * version: 1.1
  * requires jQuery v1.6 or later
  *
  * Documentation: https://github.com/readdle/jquery-livesearcher
@@ -16,7 +16,8 @@
             cache: false,               // (true/false) prevent request caching by adding timestamp to the URL
             search_item: 'search-item', // id of the search result list item
             fadeSpeed: 150,             // result list fadeIn and fadeOut speed
-            clearOnSelect: false        // if true - input field is cleared after the user select the result list element
+            clearOnSelect: false,       // if true - input field is cleared after the user select the result list element
+            notFoundText: "No records found" // Show this text, if the server has not found records
         }, options);
 
         var obj = this;
@@ -34,6 +35,7 @@
                         try {
                             results.html("");
                             var parsed = $.parseJSON(response);
+                            var count = 0;
                             $.each(parsed, function(i, val) {
                                 $('<div/>')
                                     .addClass(options.search_item)
@@ -42,7 +44,13 @@
                                     .attr('data-name', val.data)
                                     .attr('data-id', val.id)
                                     .appendTo(results);
+                                count++;
                             });
+
+                            if (!count) {
+                                $('<div/>').addClass('element-notfound').text(options.notFoundText).appendTo(results);
+                            }
+
                             $(obj).trigger('liveSearch.dataLoaded', response);
                         }
                         catch (err) {}
@@ -76,9 +84,9 @@
 
                 // Do Search
                 if (search_string == '') {
-                    $(this).parent().find(".results").fadeOut({duration: options.fadeSpeed, queue: false});
+                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 0);
                 } else {
-                    $(this).parent().find(".results").fadeIn({duration: options.fadeSpeed, queue: false});
+                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 1);
                     obj.calcResultsPosition();
                     $(this).data('timer', setTimeout(obj.search, 150));
                 }
@@ -89,12 +97,12 @@
                 // calculation of the number of items found
                 var elements = $(this).parent().find('.results').children().size();
                 if(elements && $(this).val().length) {
-                    $(this).parent().find('.results').fadeIn({duration: options.fadeSpeed, queue: false});
+                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 1);
                 }
             });
 
             $(this).focusout(function() {
-                $(this).parent().find('.results').fadeOut(150);
+                $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 0);
             });
 
             // Prevent multiple event listener bind
