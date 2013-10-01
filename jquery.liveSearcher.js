@@ -1,6 +1,6 @@
 /**
  * liveSearcher - jQuery Plugin
- * version: 1.1
+ * version: 1.1.1
  * requires jQuery v1.6 or later
  *
  * Documentation: https://github.com/readdle/jquery-livesearcher
@@ -134,7 +134,7 @@
                     obj.attr('data-name', name);
                     obj.attr('data-id', id);
 
-                    $(this).parent('.results').fadeOut(150)
+                    $(this).parent('.results').stop().fadeOut(150)
 
                     $(this).trigger('liveSearch.select', {
                         'id': id,
