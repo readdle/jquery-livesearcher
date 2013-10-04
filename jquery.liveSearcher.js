@@ -81,12 +81,12 @@
 
                 // Set Search String
                 var search_string = $(obj).val();
-
+                var results = $(this).parent().find('.results')
                 // Do Search
                 if (search_string == '') {
-                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 0);
+                    results.stop().fadeOut(options.fadeSpeed)
                 } else {
-                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 1);
+                    results.stop().fadeTo(options.fadeSpeed, 1);
                     obj.calcResultsPosition();
                     $(this).data('timer', setTimeout(obj.search, 150));
                 }
@@ -102,51 +102,33 @@
             });
 
             $(this).focusout(function() {
-                $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 0);
+                $(this).parent().find('.results').stop().fadeOut(options.fadeSpeed);
             });
 
-            // Prevent multiple event listener bind
-            var addEventListener = true;
-            if (typeof window.liveSearchBind === 'undefined') {
-                window.liveSearchBind = []
-            } else {
-                var len = window.liveSearchBind.length;
-                for (var i=0; i<len; i++) {
-                    if(window.liveSearchBind[i] === options.search_item) {
-                        addEventListener = false;
-                        break;
-                    }
+            var items = $('.'+options.search_item)
+            items.die("click")  // Prevent multiple event listener bind
+            items.live("click", function(e) {
+                var id = $(this).attr('data-id');
+                var name = $(this).attr('data-name')
+
+                if(options.clearOnSelect) {
+                    obj.val('');
+                } else {
+                    obj.val($(this).text());
                 }
-            }
 
-            if(addEventListener) {
+                obj.attr('data-name', name);
+                obj.attr('data-id', id);
 
-                $('.'+options.search_item).live("click", function(e) {
-                    var id = $(this).attr('data-id');
-                    var name = $(this).attr('data-name')
+                $(this).parent('.results').stop().fadeOut(options.fadeSpeed)
 
-                    if(options.clearOnSelect) {
-                        obj.val('');
-                    } else {
-                        obj.val($(this).text());
-                    }
-
-                    obj.attr('data-name', name);
-                    obj.attr('data-id', id);
-
-                    $(this).parent('.results').stop().fadeOut(150)
-
-                    $(this).trigger('liveSearch.select', {
-                        'id': id,
-                        'data': name
-                    });
-
-                    e.preventDefault();
+                $(this).trigger('liveSearch.select', {
+                    'id': id,
+                    'data': name
                 });
 
-                window.liveSearchBind.push(options.search_item);
-
-            }
+                e.preventDefault();
+            });
 
         };
 
