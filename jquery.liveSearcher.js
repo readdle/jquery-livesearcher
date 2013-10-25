@@ -1,11 +1,11 @@
 /**
  * liveSearcher - jQuery Plugin
- * version: 1.1.1
+ * version: 1.3
  * requires jQuery v1.6 or later
  *
  * Documentation: https://github.com/readdle/jquery-livesearcher
  *
- * Copyright (c) 2013 Rodik Alexandr - rodik@readdle.com
+ * Copyright (c) 2013 Readdle inc.
  */
 (function($) {
 
@@ -14,7 +14,7 @@
             dataSource: "",             // Data source URL
             method: "GET",              // GET/POST
             cache: false,               // (true/false) prevent request caching by adding timestamp to the URL
-            search_item: 'search-item', // id of the search result list item
+            search_item: 'search-item', // class selector of the search result list item
             fadeSpeed: 150,             // result list fadeIn and fadeOut speed
             clearOnSelect: false,       // if true - input field is cleared after the user select the result list element
             notFoundText: "No records found" // Show this text, if the server has not found records
@@ -59,57 +59,151 @@
             } return false;
         };
 
-        // Calculate position of the ".results" block
-        this.calcResultsPosition = function() {
-            var results = this.parent().find('.results');
-            var offset = this.offset();
-            var height = this.outerHeight();
-            var width = this.innerWidth();
-            results.offset({
-                top: offset.top+height,
-                left: offset.left
-            });
-            results.width(width);
+        var results = {
+            element: obj.parent().find('.results'),
+
+            calcPosition: function() {
+                var element = results.element;
+                var offset = obj.offset();
+                var height = obj.outerHeight();
+                var width = obj.innerWidth();
+                element.offset({
+                    top: offset.top + height,
+                    left: offset.left
+                });
+                element.width(width);
+            },
+
+            delCurrent: function() {
+                results.element.children('.'+options.search_item).removeClass('current');
+            },
+
+            resetCurrent: function() {
+                results.element.children('.'+options.search_item).removeClass('current');
+                results.element.children('.'+options.search_item).first().addClass('current');
+            },
+
+            current: function() {
+                return $(results.element.children('.current')[0]);
+            },
+
+            focusNext: function() {
+                if (!results.current().length) {
+                    results.resetCurrent();
+                } else {
+                    var oldCurrent = results.current();
+                    var next = oldCurrent.next('.'+options.search_item);
+                    var container = results.element;
+                    if (next.length) {
+                        results.delCurrent();
+                        next.addClass('current');
+
+                        container.scrollTop(container.scrollTop() + results.current().position().top - container.height()/2 + results.current().height()/2);
+                    }
+                }
+            },
+
+            focusPrev: function() {
+                if (!results.current()) {
+                    results.resetCurrent();
+                } else {
+                    var oldCurrent = results.current();
+                    var prev = oldCurrent.prev('.'+options.search_item);
+                    var container = results.element;
+                    if (prev.length) {
+                        results.delCurrent();
+                        prev.addClass('current');
+
+                        container.scrollTop(container.scrollTop() + results.current().position().top - container.height()/2 + results.current().height()/2);
+                    }
+                }
+            },
+
+            show: function(speed) {
+                results.element.stop().fadeTo(speed, 1);
+            },
+
+            hide: function(speed) {
+                results.element.stop().fadeOut(speed);
+            }
         };
 
         var init = function() {
             var id = $(this).attr('id');
 
             $(this).live("keyup", function(e) {
-                // Set Timeout
-                clearTimeout($.data(this, 'timer'));
-
-                // Set Search String
-                var search_string = $(obj).val();
-                var results = $(this).parent().find('.results')
-                // Do Search
-                if (search_string == '') {
-                    results.stop().fadeOut(options.fadeSpeed)
-                } else {
-                    results.stop().fadeTo(options.fadeSpeed, 1);
-                    obj.calcResultsPosition();
-                    $(this).data('timer', setTimeout(obj.search, 150));
+                // Arrows
+                if (e.which == 38) {
+                    results.focusPrev();
                 }
-                $(this).parent().find(".results").scrollTop(0);
+                else if(e.which == 40) {
+                    results.focusNext();
+                }
+                // Enter
+                else if(e.which == 13) {
+                    if (results.current().length) {
+                        var id = results.current().attr('data-id');
+                        var name = results.current().attr('data-name');
+
+                        if(options.clearOnSelect) {
+                            obj.val('');
+                        } else {
+                            obj.val($(this).text());
+                        }
+
+                        obj.attr('data-name', name);
+                        obj.attr('data-id', id);
+
+                        results.hide();
+
+                        results.delCurrent();
+
+                        $(this).trigger('liveSearch.select', {
+                            'id': id,
+                            'data': name
+                        });
+                    }
+                }
+                // Another keys
+                else {
+                    // Set Timeout
+                    clearTimeout($.data(this, 'timer'));
+
+                    // Set Search String
+                    var search_string = $(obj).val();
+                    // Do Search
+                    if (search_string == '') {
+                        results.hide(options.fadeSpeed);
+                    } else {
+                        results.show(options.fadeSpeed);
+                        results.calcPosition();
+                        $(this).data('timer', setTimeout(obj.search, 150));
+                    }
+                    $(this).parent().find(".results").scrollTop(0);
+                }
             });
 
+            // Text field focus in
             $(this).focusin(function() {
                 // calculation of the number of items found
-                var elements = $(this).parent().find('.results').children().size();
+                var elements = results.element.children().size();
                 if(elements && $(this).val().length) {
-                    $(this).parent().find('.results').stop().fadeTo(options.fadeSpeed, 1);
+                    results.show(options.fadeSpeed);
                 }
             });
 
+            // Text field focus out
             $(this).focusout(function() {
-                $(this).parent().find('.results').stop().fadeOut(options.fadeSpeed);
+                results.hide(options.fadeSpeed);
+                results.delCurrent();
             });
 
-            var items = $('.'+options.search_item)
-            items.die("click")  // Prevent multiple event listener bind
+            // Result container item click
+            var items = $('.'+options.search_item);
+            items.die("click");  // Prevent multiple event listener bind
             items.live("click", function(e) {
                 var id = $(this).attr('data-id');
-                var name = $(this).attr('data-name')
+                var name = $(this).attr('data-name');
 
                 if(options.clearOnSelect) {
                     obj.val('');
@@ -120,7 +214,7 @@
                 obj.attr('data-name', name);
                 obj.attr('data-id', id);
 
-                $(this).parent('.results').stop().fadeOut(options.fadeSpeed)
+                results.hide();
 
                 $(this).trigger('liveSearch.select', {
                     'id': id,
