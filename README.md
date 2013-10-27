@@ -34,12 +34,12 @@ Plugin receives data from data source in JSON format:
 ```json
 [
     {
-        id: 1,
-        data: "Bob"
+        "id": "1",
+        "data": "Bob"
     },
     {
-        id: 2,
-        data: "Josh"
+        "id": "2",
+        "data": "Josh"
     }
 ]
 ```
@@ -49,8 +49,8 @@ You can transfer additional values in the 'data' attribute, each value is separa
 ```json
 [
     {
-        id: 1,
-        data: "Bob%%Dylan"
+        "id": 1,
+        "data": "Bob%%Dylan"
     },
 ]
 ```
