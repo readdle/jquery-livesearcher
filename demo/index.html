@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>liveSearcher example</title>
-    <link rel="stylesheet" href="demo/example.css"/>
+    <link rel="stylesheet" href="example.css"/>
 </head>
 <body>
     <div>
@@ -24,14 +24,14 @@
 
     <script type="text/javascript">
         $("#livesearch").liveSearch({
-            dataSource: 'demo/dummy.php'
+            dataSource: 'dummy.php'
         });
 
         $("#livesearch").on('liveSearch.dataLoaded', function(e, args) {
             console.log('DATA LOAD event', args);
         });
 
-        $(".results").on('liveSearch.select', function(e, args) {
+        $("#livesearch").on('liveSearch.select', function(e, args) {
             console.log('SELECT event', args);
         });
     </script>

@@ -50,3 +50,7 @@ input[type=text] {
 .element:hover {
     background-color: #BBD3F9;
 }
+
+.current {
+    background-color: #BBD3F9;
+}
