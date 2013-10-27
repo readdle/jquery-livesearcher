@@ -148,7 +148,7 @@
                         if(options.clearOnSelect) {
                             obj.val('');
                         } else {
-                            obj.val($(this).text());
+                            obj.val(results.current().text());
                         }
 
                         obj.attr('data-name', name);
@@ -158,7 +158,7 @@
 
                         results.delCurrent();
 
-                        $(this).trigger('liveSearch.select', {
+                        $(obj).trigger('liveSearch.select', {
                             'id': id,
                             'data': name
                         });
@@ -216,7 +216,7 @@
 
                 results.hide();
 
-                $(this).trigger('liveSearch.select', {
+                $(obj).trigger('liveSearch.select', {
                     'id': id,
                     'data': name
                 });
