@@ -54,3 +54,11 @@ input[type=text] {
 .current {
     background-color: #BBD3F9;
 }
+
+.red {
+    color: red;
+}
+
+.blue {
+    color: blue;
+}

@@ -22,16 +22,22 @@
     <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="../jquery.liveSearcher.js"></script>
 
+    <script type="text/html" id="item_tmpl">
+        <div class="<%=(color == 1) ? 'blue' : 'red' %> <%=search_item%> element" data-name="<%=title%>" data-id="<%=id%>"><%=title%></div>
+    </script>
+
     <script type="text/javascript">
-        $("#livesearch").liveSearch({
-            dataSource: '/demo/dummy.php'
+        $input = $("#livesearch");
+        $input.liveSearch({
+            dataSource: '/demo/dummy.php',
+            tpl: '#item_tmpl'
         });
 
-        $("#livesearch").on('liveSearch.dataLoaded', function(e, args) {
+        $input.on('liveSearch.dataLoaded', function(e, args) {
             console.log('DATA LOAD event', args);
         });
 
-        $("#livesearch").on('liveSearch.select', function(e, args) {
+        $input.on('liveSearch.select', function(e, args) {
             console.log('SELECT event', args);
         });
     </script>

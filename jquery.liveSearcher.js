@@ -1,6 +1,6 @@
 /**
  * LiveSearcher - jQuery Plugin
- * Version: 1.3.1
+ * Version: 1.4.0
  * Requires jQuery v1.6 or later
  *
  * Documentation: https://github.com/readdle/jquery-livesearcher
@@ -11,19 +11,53 @@
 
     $.fn.liveSearch = function(options) {
         options = $.extend({
-            dataSource: "",             // Data source URL
-            method: "GET",              // GET/POST
-            cache: false,               // (true/false) prevent request caching by adding timestamp to the URL
-            search_item: 'search-item', // class selector of the search result list item
-            fadeSpeed: 150,             // result list fadeIn and fadeOut speed
-            clearOnSelect: false,       // if true - input field is cleared after the user select the result list element
-            notFoundText: "No records found" // Show this text, if the server has not found records
+            dataSource: "",                   // Data source URL
+            method: "GET",                    // GET/POST
+            cache: false,                     // (true/false) prevent request caching by adding timestamp to the URL
+            search_item: 'search-item',       // class selector of the search result list item
+            fadeSpeed: 150,                   // result list fadeIn and fadeOut speed
+            clearOnSelect: false,             // if true - input field is cleared after the user select the result list element
+            notFoundText: "No records found", // Show this text, if the server has not found records
+            tpl: null                         // Template id, using default template if null
         }, options);
 
-        var obj = this;
+        var _this = this;
+        var template = null;
+
+        // Simple JavaScript Templating By John Resig
+        var cache = {};
+        function tmpl(str, data) {
+            // Figure out if we're getting a template, or if we need to
+            // load the template - and be sure to cache the result.
+            var fn = !/\W/.test(str) ?
+                cache[str] = cache[str] ||
+                    tmpl(document.getElementById(str).innerHTML) :
+
+                // Generate a reusable function that will serve as a template
+                // generator (and which will be cached).
+                new Function("obj",
+                    "var p=[],print=function(){p.push.apply(p,arguments);};" +
+
+                        // Introduce the data as local variables using with(){}
+                        "with(obj){p.push('" +
+
+                        // Convert the template into pure JavaScript
+                        str
+                            .replace(/[\r\t\n]/g, " ")
+                            .split("<%").join("\t")
+                            .replace(/((^|%>)[^\t]*)'/g, "$1\r")
+                            .replace(/\t=(.*?)%>/g, "',$1,'")
+                            .split("\t").join("');")
+                            .split("%>").join("p.push('")
+                            .split("\r").join("\\'")
+                        + "');}return p.join('');");
+
+            // Provide some basic currying to the user
+            return data ? fn( data ) : fn;
+        }
 
         this.search = function() {
-            var query_value = $.trim($(obj).val());
+            var query_value = $.trim($(_this).val());
             if(query_value !== '') {
                 $.ajax({
                     type: options.method,
@@ -31,20 +65,16 @@
                     data: { query: query_value },
                     cache: options.cache,
                     success: function(response) {
-                        var results = $(obj).parent().find(".results");
+                        var results = $(_this).parent().find(".results");
                         try {
                             results.html("");
                             var parsed = $.parseJSON(response);
                             var count = 0;
                             $.each(parsed, function(i, val) {
-                                $('<div/>')
-                                    .addClass(options.search_item)
-                                    .addClass('element')
-                                    .text(val.data['title'])
-                                    .attr('data-name', val.data['title'])
-                                    .attr('data-id', val.id)
-                                    .data('livesearch', val.data)
+                                $(template(val))
+                                    .data('livesearch', val)
                                     .appendTo(results);
+
                                 count++;
                             });
 
@@ -52,7 +82,7 @@
                                 $('<div/>').addClass('element-notfound').text(options.notFoundText).appendTo(results);
                             }
 
-                            $(obj).trigger('liveSearch.dataLoaded', response);
+                            $(_this).trigger('liveSearch.dataLoaded', response);
                         }
                         catch (err) {}
                     }
@@ -61,13 +91,13 @@
         };
 
         var results = {
-            $element: obj.parent().find('.results'),
+            $element: _this.parent().find('.results'),
 
             calcPosition: function() {
                 var element = results.$element;
-                var offset = obj.offset();
-                var height = obj.outerHeight();
-                var width = obj.innerWidth();
+                var offset = _this.offset();
+                var height = _this.outerHeight();
+                var width = _this.innerWidth();
                 element.offset({
                     top: offset.top + height,
                     left: offset.left
@@ -132,6 +162,9 @@
         var init = function() {
             var id = $(this).attr('id');
 
+            options.tpl = (options.tpl) ? $(options.tpl).html() : '<div class="<%=search_item%> element" data-name="<%=title%>" data-id="<%=id%>"><%=title%></div>';
+            template = tmpl(options.tpl.replace('<%=search_item%>', options.search_item));
+
             $(this).live("keyup", function(e) {
                 // Arrows
                 if (e.which == 38) {
@@ -147,17 +180,17 @@
                         var name = results.current().attr('data-name');
 
                         if(options.clearOnSelect) {
-                            obj.val('');
+                            _this.val('');
                         } else {
-                            obj.val(results.current().text());
+                            _this.val(results.current().text());
                         }
 
-                        obj.attr('data-name', name);
-                        obj.attr('data-id', id);
+                        _this.attr('data-name', name);
+                        _this.attr('data-id', id);
 
                         results.hide();
 
-                        $(obj).trigger('liveSearch.select', {
+                        $(_this).trigger('liveSearch.select', {
                             'id': id,
                             'data': results.current().data('livesearch')
                         });
@@ -171,14 +204,14 @@
                     clearTimeout($.data(this, 'timer'));
 
                     // Set Search String
-                    var search_string = $(obj).val();
+                    var search_string = $(_this).val();
                     // Do Search
                     if (search_string == '') {
                         results.hide(options.fadeSpeed);
                     } else {
                         results.show(options.fadeSpeed);
                         results.calcPosition();
-                        $(this).data('timer', setTimeout(obj.search, 150));
+                        $(this).data('timer', setTimeout(_this.search, 150));
                     }
                     $(this).parent().find(".results").scrollTop(0);
                 }
@@ -207,17 +240,17 @@
                 var name = $(this).attr('data-name');
 
                 if(options.clearOnSelect) {
-                    obj.val('');
+                    _this.val('');
                 } else {
-                    obj.val($(this).text());
+                    _this.val($(this).text());
                 }
 
-                obj.attr('data-name', name);
-                obj.attr('data-id', id);
+                _this.attr('data-name', name);
+                _this.attr('data-id', id);
 
                 results.hide();
 
-                $(obj).trigger('liveSearch.select', {
+                $(_this).trigger('liveSearch.select', {
                     'id': id,
                     'data': $.data(this, 'livesearch')
                 });
