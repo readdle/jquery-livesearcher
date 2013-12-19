@@ -48,7 +48,7 @@ Plugin receives data from data source in JSON format:
 ]
 ```
 
-You can transfer additional values in the 'data' attribute, each value is separated by the `%%`. See example of handling additional data below in events section.
+You can transfer additional values in the 'data' attribute. See example of handling additional data below in events section.
 
 ```json
 [
