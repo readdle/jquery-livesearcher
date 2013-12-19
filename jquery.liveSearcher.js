@@ -1,7 +1,7 @@
 /**
- * liveSearcher - jQuery Plugin
- * version: 1.3
- * requires jQuery v1.6 or later
+ * LiveSearcher - jQuery Plugin
+ * Version: 1.3.1
+ * Requires jQuery v1.6 or later
  *
  * Documentation: https://github.com/readdle/jquery-livesearcher
  *
@@ -40,9 +40,10 @@
                                 $('<div/>')
                                     .addClass(options.search_item)
                                     .addClass('element')
-                                    .text(val.data.split('%%')[0])
-                                    .attr('data-name', val.data)
+                                    .text(val.data['title'])
+                                    .attr('data-name', val.data['title'])
                                     .attr('data-id', val.id)
+                                    .data('livesearch', val.data)
                                     .appendTo(results);
                                 count++;
                             });
@@ -60,10 +61,10 @@
         };
 
         var results = {
-            element: obj.parent().find('.results'),
+            $element: obj.parent().find('.results'),
 
             calcPosition: function() {
-                var element = results.element;
+                var element = results.$element;
                 var offset = obj.offset();
                 var height = obj.outerHeight();
                 var width = obj.innerWidth();
@@ -75,16 +76,16 @@
             },
 
             delCurrent: function() {
-                results.element.children('.'+options.search_item).removeClass('current');
+                results.$element.children('.'+options.search_item).removeClass('current');
             },
 
             resetCurrent: function() {
-                results.element.children('.'+options.search_item).removeClass('current');
-                results.element.children('.'+options.search_item).first().addClass('current');
+                results.$element.children('.'+options.search_item).removeClass('current');
+                results.$element.children('.'+options.search_item).first().addClass('current');
             },
 
             current: function() {
-                return $(results.element.children('.current')[0]);
+                return $(results.$element.children('.current'));
             },
 
             focusNext: function() {
@@ -93,7 +94,7 @@
                 } else {
                     var oldCurrent = results.current();
                     var next = oldCurrent.next('.'+options.search_item);
-                    var container = results.element;
+                    var container = results.$element;
                     if (next.length) {
                         results.delCurrent();
                         next.addClass('current');
@@ -109,7 +110,7 @@
                 } else {
                     var oldCurrent = results.current();
                     var prev = oldCurrent.prev('.'+options.search_item);
-                    var container = results.element;
+                    var container = results.$element;
                     if (prev.length) {
                         results.delCurrent();
                         prev.addClass('current');
@@ -120,11 +121,11 @@
             },
 
             show: function(speed) {
-                results.element.stop().fadeTo(speed, 1);
+                results.$element.stop().fadeTo(speed, 1);
             },
 
             hide: function(speed) {
-                results.element.stop().fadeOut(speed);
+                results.$element.stop().fadeOut(speed);
             }
         };
 
@@ -156,12 +157,12 @@
 
                         results.hide();
 
-                        results.delCurrent();
-
                         $(obj).trigger('liveSearch.select', {
                             'id': id,
-                            'data': name
+                            'data': results.current().data('livesearch')
                         });
+
+                        results.delCurrent();
                     }
                 }
                 // Another keys
@@ -186,7 +187,7 @@
             // Text field focus in
             $(this).focusin(function() {
                 // calculation of the number of items found
-                var elements = results.element.children().size();
+                var elements = results.$element.children().size();
                 if(elements && $(this).val().length) {
                     results.show(options.fadeSpeed);
                 }
@@ -218,7 +219,7 @@
 
                 $(obj).trigger('liveSearch.select', {
                     'id': id,
-                    'data': name
+                    'data': $.data(this, 'livesearch')
                 });
 
                 e.preventDefault();
