@@ -35,11 +35,15 @@ Plugin receives data from data source in JSON format:
 [
     {
         "id": 1,
-        "data": "Bob"
+        "data": {
+            "title": "Bob"
+        }
     },
     {
         "id": 2,
-        "data": "Josh"
+        "data": {
+            "title": "Josh"
+        }
     }
 ]
 ```
@@ -50,7 +54,10 @@ You can transfer additional values in the 'data' attribute, each value is separa
 [
     {
         "id": 1,
-        "data": "Bob%%Dylan"
+        "data": {
+            "title": "Bob",
+            "last name": "Dylan"
+        }
     },
 ]
 ```
@@ -69,7 +76,6 @@ $("#textfield").on('liveSearch.dataLoaded', function(e, args) {
 });
 
 $("#textfield").on('liveSearch.select', function(e, args) {
-    var data = args.data.split('%%');
-    alert(args.id + ': '+data[0]+' '+data[1]);
+    alert(args.id + ': '+args.data['title']+' '+args.data['last name']);
 });
 ```
